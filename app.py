@@ -5,6 +5,13 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 import io
 import base64
 
+def extract_text_from_docx(uploaded_file):
+    doc = Document(uploaded_file)
+    full_text = []
+    for paragraph in doc.paragraphs:
+        full_text.append(paragraph.text)
+    return '\n'.join(full_text)
+
 def create_word_doc(text, main_font_size, bold_font_size, direction):
     doc = Document()
     
@@ -77,9 +84,21 @@ def main():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("Input Text")
+        st.subheader("Input Methods")
+        
+        # File upload
+        uploaded_file = st.file_uploader("Upload a Word document", type=['docx'])
+        
+        if uploaded_file is not None:
+            text_content = extract_text_from_docx(uploaded_file)
+            st.success("Document uploaded successfully!")
+        else:
+            text_content = ""
+            
+        st.subheader("Edit Text")
         text_input = st.text_area(
-            "Enter your text (use **text** for bold)",
+            "Enter or edit your text (use **text** for bold)",
+            value=text_content,
             height=300,
             help="Surround text with ** to make it bold"
         )
@@ -115,6 +134,15 @@ def main():
             st.write("**Column Text:**")
             st.write(preview_text)
     
+        st.markdown("---")
+        st.subheader("Instructions")
+        st.markdown("""
+        1. Upload a Word document or enter text directly
+        2. Mark text as bold using **double asterisks**
+        3. Adjust font sizes and text direction
+        4. Click Generate Document to download
+        """)
+    
     # Generate document
     if st.button("Generate Document"):
         if text_input:
@@ -128,7 +156,7 @@ def main():
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
         else:
-            st.warning("Please enter some text first!")
+            st.warning("Please enter some text or upload a document first!")
 
 if __name__ == "__main__":
     main()
